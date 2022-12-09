@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+    crossorigin="anonymous"></script>
+  <title>Query Readings</title>
+</head>
+
+<body>
+  <div class="container-fill text-center bg-primary text-white">
+    <h1 class="py-4 my-0">SensorsDataAPI</h1>
+  </div>
+
+  <nav class="navbar navbar-light bg-info py-0 justify-content-center">
+    <a class="navbar-brand text-white px-3" href="manage_sensors">
+      <h6 class="my-0"> MANAGE SENSORS </h6>
+    </a>
+    <a class="navbar-brand text-white px-3" href="manage_readings">
+      <h6 class="my-0"> MANAGE READINGS </h6>
+    </a>
+    <a class="navbar-brand text-white px-3" href="query_readings">
+      <h4 class="my-0"> QUERY READINGS </h4>
+    </a>
+  </nav>
+
+  <div class="container py-4">
+    <div class="row justify-content-center ">
+      <div class="col-3">
+        <div class="border border-secondary px-4 py-4">
+        <form class="row px-2" method="POST" action="{% url 'query_readings' %}">
+          {% csrf_token %}
+          <label class="form-label" for="sensor_type">Sensor Type:</label>
+          <select class="form-select mb-3" name="sensor_type" id="sensor_type">
+            <option selected="selected" value="All types">All types</option>
+            {% for s_type in sensor_types %}
+            {% if s_type != sensor_types %}
+            <option value="{{s_type}}">{{s_type}}</option>
+            {% else %}
+            <option selected="selected" value="{{sensor_type}}">
+              {{sensor_type}}
+            </option>
+            {% endif %} {% endfor %}
+          </select>
+
+          <label class="form-label" for="location">Sensor Location:</label>
+          <select class="form-select mb-3" name="location" id="location">
+            <option selected="selected" value="All locations">
+              All locations
+            </option>
+            {% for loc in locations %}
+            {% if loc != location %}
+            <option value="{{loc}}">{{loc}}</option>
+            {% else %}
+            <option selected="selected" value="{{location}}">
+              {{location}}
+            </option>
+            {% endif %} {% endfor %}
+          </select>
+
+          <label class="text-center form-label mb-2" for="first_time"><u>Time range</u></label>
+
+          <label class="form-label" for="first_time">Between:</label>
+          <select class="form-select mb-3" name="first_time" id="first_time">
+            {% for time in times %}
+            {% if time != first_time %}
+            <option value="{{time}}">{{time}}</option>
+            {% else %}
+            <option selected="selected" value="{{first_time}}">
+              {{first_time}}
+            </option>
+            {% endif %} {% endfor %}
+          </select>
+
+          <label class="form-label" for="second_time">And:</label>
+          <select class="form-select mb-3" name="second_time" id="second_time">
+            {% for time in times %}
+            {% if time != second_time %}
+            <option value="{{time}}">{{time}}</option>
+            {% else %}
+            <option selected="selected" value="{{second_time}}">
+              {{second_time}}
+            </option>
+            {% endif %} {% endfor %}
+          </select>
+
+          <input type="submit" value="FILTER" class="btn btn-info text-white" />
+        </form>
+        <form class="row px-2 mt-3" action="query_readings">
+          <input type="submit" value="CLEAR" class="btn btn-secondary btn-block" />
+        </form>
+
+
+
+        </div>
+      </div>
+
+      <div class="col-9">
+        {% if paginator.count == 0 %}
+        <p class="text-center text-secondary">No readings were found</p>
+        {% else %}
+        <table class="table border border-secondary text-center table-striped">
+          <thead>
+            <tr>
+              <th scope="col">ReadingId</th>
+              <th scope="col">SensorId</th>
+              <th scope="col">Type</th>
+              <th scope="col">Value</th>
+              <th scope="col">Date</th>
+              <th scope="col">Time</th>
+              <th scope="col">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for reading in readings %}
+            <tr>
+              <td>{{reading.id}}</td>
+              <td>{{reading.sensor.sensor_id}}</td>
+              <td>{{reading.reading_type}}</td>
+              <td>{{reading.reading_value}}</td>
+              <td>{{reading.reading_date}}</td>
+              <td>{{reading.reading_time}}</td>
+              <td>{{reading.description}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="pagination justify-content-center">
+          {% if readings.has_previous %}
+          <form method="POST" action="query_readings?page={{ readings.previous_page_number }}">
+            {% csrf_token %}
+            <input type="hidden" value="{{sensor_type}}" name="sensor_type">
+            <input type="hidden" value="{{location}}" name="location">
+            <input type="hidden" value="{{first_time}}" name="first_time">
+            <input type="hidden" value="{{second_time}}" name="second_time">
+            <input type="submit" value="Previous Page" class="btn btn-outline-secondary">
+          </form>
+          {% endif %}
+          {% if readings.has_next %}
+          <form method="POST" action="query_readings?page={{ readings.next_page_number }}">
+            {% csrf_token %}
+            <input type="hidden" value="{{sensor_type}}" name="sensor_type">
+            <input type="hidden" value="{{location}}" name="location">
+            <input type="hidden" value="{{first_time}}" name="first_time">
+            <input type="hidden" value="{{second_time}}" name="second_time">
+            <input type="submit" value="Next Page" class="btn btn-outline-secondary">
+          </form>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if value_range %}
+        <p> <strong>Values' range: </strong> {{value_range}} </p>
+        <p> <strong>Mean value: </strong>  {{mean_value}}</p>
+        <p> <strong>10 max records: </strong>  {{max_records}}</p>
+        <p> <strong>10 min records: </strong>  {{min_records}} </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
